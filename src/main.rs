@@ -3,18 +3,6 @@ use specs::prelude::*;
 use std::cmp::{max, min};
 use specs_derive::Component;
 
-// Struct State - a class
-struct State {
-    ecs: World
-}
-// State struct implements a trait (i.e. an interface) and overrides the tick function
-impl GameState for State {
-    fn tick(&mut self, ctx: &mut Rltk) {
-        ctx.cls();
-        ctx.print(1, 1, "Hello Rust World");
-    }
-}
-
 /* POD (Plain Old Data) - no logic - "pure" ECS
    2 reasons to use this model:
    1) keeps all the logic code in "systems" part of ECS
@@ -43,6 +31,24 @@ struct Renderable {
     glyph: rltk::FontCharType,
     fg: RGB,
     bg: RGB
+}
+
+// Struct State - a class
+struct State {
+    ecs: World
+}
+// State struct implements a trait (i.e. an interface) and overrides the tick function
+impl GameState for State {
+    fn tick(&mut self, ctx: &mut Rltk) {
+        ctx.cls();
+
+        let positions = self.ecs.read_storage::<Position>();
+        let renderables = self.ecs.read_storage::<Renderable>();
+
+        for (pos, render) in (&positions, &renderables).join() {
+            ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+        }
+    }
 }
 
 fn main() -> rltk::BError {
