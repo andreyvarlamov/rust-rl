@@ -7,22 +7,24 @@ mod map;
 pub use map::*;
 mod player;
 use player::*;
+mod rect;
+pub use rect::Rect;
+
 // Struct State - a class
 pub struct State {
     ecs: World
 }
 impl State {
-    fn run_systems(&mut self) {
-
-        self.ecs.maintain();
-    }
+    // fn run_systems(&mut self) {
+    //     self.ecs.maintain();
+    // }
 }
 // State struct implements a trait (i.e. an interface) and overrides the tick function
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
 
-        self.run_systems();
+        // self.run_systems();
         player_input(self, ctx);
 
         let map = self.ecs.fetch::<Vec<TileType>>();
@@ -50,7 +52,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
 
-    gs.ecs.insert(new_map());
+    gs.ecs.insert(new_map_rooms_and_corridors());
 
     // Builder pattern - common in Rust
     // Each function returns a copy of itself (EntityByilder)
