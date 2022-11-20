@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use specs_derive::*;
-use rltk::{ RGB };
+use rltk::{ RGB, Point };
 
 /* POD (Plain Old Data) - no logic - "pure" ECS
    2 reasons to use this model:
@@ -35,3 +35,9 @@ pub struct Renderable {
 #[derive(Component,Debug)]
 // Component with no data - "tag component"
 pub struct Player {}
+
+#[derive(Component)]
+pub struct Viewshed {
+    pub visible_tiles : Vec<Point>,
+    pub range : i32
+}
