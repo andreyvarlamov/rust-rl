@@ -1,6 +1,7 @@
-use rltk::{ GameState, Rltk, RGB };
+use rltk::{ GameState, Rltk, RGB, TextAlign };
 use specs::prelude::*;
 
+// Crate files
 mod components;
 pub use components::*;
 mod map;
@@ -11,6 +12,9 @@ mod rect;
 pub use rect::Rect;
 mod visibility_system;
 use visibility_system::VisibilitySystem;
+
+// Consts
+const SHOW_FPS : bool = false;
 
 // Struct State - a class
 pub struct State {
@@ -41,6 +45,20 @@ impl GameState for State {
 
         for (pos, render) in (&positions, &renderables).join() {
             ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+        }
+
+        if SHOW_FPS {
+            ctx.draw_box(39, 0, 20, 3,
+                         RGB::named(rltk::WHITE),
+                         RGB::named(rltk::BLACK)
+            );
+            ctx.printer(
+                58,
+                1,
+                &format!("#[pink]FPS: #[]{}", ctx.fps),
+                TextAlign::Right,
+                None,
+            );
         }
     }
 }
