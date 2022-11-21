@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{ Map, Position, Viewshed };
+use super::{ Map, Player, Position, Viewshed };
 use rltk::{field_of_view, Point};
 
 pub struct VisibilitySystem {}
@@ -8,7 +8,8 @@ impl<'a> System<'a> for VisibilitySystem {
     type SystemData = (WriteExpect<'a, Map>,
                        Entities<'a>,
                        WriteStorage<'a, Viewshed>,
-                       WriteStorage<'a, Position>);
+                       WriteStorage<'a, Position>,
+                       ReadStorage<'a, Player>);
 
     fn run(&mut self, data : Self::SystemData) {
         let (mut map, entities, mut viewshed, pos, player) = data;
@@ -26,7 +27,7 @@ impl<'a> System<'a> for VisibilitySystem {
             );
 
             let p : Option<&Player> = player.get(ent);
-            if let Some(p) = p {
+            if let Some(_p) = p {
                 for vis in viewshed.visible_tiles.iter() {
                     let idx = map.xy_idx(vis.x, vis.y);
                     map.revealed_tiles[idx] = true;
