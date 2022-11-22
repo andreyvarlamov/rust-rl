@@ -1,4 +1,4 @@
-use rltk::{ GameState, Rltk, RGB, TextAlign };
+use rltk::{ GameState, Point, Rltk, RGB, TextAlign };
 use specs::prelude::*;
 
 // Crate files
@@ -18,9 +18,13 @@ use monster_ai_system::MonsterAI;
 // Consts
 const SHOW_FPS : bool = false;
 
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState { Paused, Running }
+
 // Struct State - a class
 pub struct State {
-    ecs: World
+    pub ecs : World,
+    pub runstate : RunState
 }
 
 impl State {
@@ -39,8 +43,12 @@ impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
 
-        player_input(self, ctx);
-        self.run_systems();
+        if self.runstate == RunState::Running {
+            self.run_systems();
+            self.runstate = RunState::Paused;
+        } else {
+            self.runstate = player_input(self, ctx);
+        }
 
         draw_map(&self.ecs, ctx);
 
@@ -77,7 +85,8 @@ fn main() -> rltk::BError {
         .with_title("Roguelike Tutorial")
         .build()?;
     let mut gs = State{
-        ecs: World::new()
+        ecs : World::new(),
+        runstate : RunState::Running
     };
 
     gs.ecs.register::<Position>();
@@ -85,6 +94,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Player>();
     gs.ecs.register::<Viewshed>();
     gs.ecs.register::<Monster>();
+    gs.ecs.register::<Name>();
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -100,6 +110,7 @@ fn main() -> rltk::BError {
             bg : RGB::named(rltk::BLACK),
         })
         .with(Player{})
+        .with(Name { name : "Player".to_string() })
         .with(Viewshed {
             visible_tiles : Vec::new(),
             range : 8,
@@ -108,14 +119,15 @@ fn main() -> rltk::BError {
         .build();
 
     let mut rng = rltk::RandomNumberGenerator::new();
-    for room in map.rooms.iter().skip(1) {
+    for (i, room) in map.rooms.iter().skip(1).enumerate() {
         let (x, y) = room.center();
 
         let glyph : rltk::FontCharType;
+        let name : String;
         let roll = rng.roll_dice(1, 2);
         match roll {
-            1 => { glyph = rltk::to_cp437('g') }
-            _ => { glyph = rltk::to_cp437('o') }
+            1 => { glyph = rltk::to_cp437('g'); name = "Goblin".to_string(); }
+            _ => { glyph = rltk::to_cp437('o'); name = "Orc".to_string(); }
         }
 
         gs.ecs
@@ -127,6 +139,7 @@ fn main() -> rltk::BError {
                 bg : RGB::named(rltk::BLACK),
             })
             .with(Monster {})
+            .with(Name { name : format!("{} #{}", &name, i) })
             .with(Viewshed {
                 visible_tiles : Vec::new(),
                 range : 8,
@@ -136,6 +149,7 @@ fn main() -> rltk::BError {
     }
 
     gs.ecs.insert(map);
+    gs.ecs.insert(Point::new(player_x, player_y));
 
     rltk::main_loop(context, gs)
 }
