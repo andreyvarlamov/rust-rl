@@ -5,7 +5,7 @@ use specs::prelude::*;
 
 // Consts
 const MAPWIDTH : usize = 80;
-const MAPHEIGHT : usize = 50;
+const MAPHEIGHT : usize = 43;
 const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
 
 /* More derived features (from Rust itself)

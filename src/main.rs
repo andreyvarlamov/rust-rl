@@ -14,6 +14,8 @@ mod visibility_system;
 use visibility_system::VisibilitySystem;
 mod monster_ai_system;
 use monster_ai_system::MonsterAI;
+mod gui;
+use gui::draw_ui;
 
 // Consts
 const SHOW_FPS : bool = false;
@@ -62,6 +64,8 @@ impl GameState for State {
                 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
             }
         }
+
+        draw_ui(&self.ecs, ctx);
 
         if SHOW_FPS {
             ctx.draw_box(39, 0, 20, 3,
