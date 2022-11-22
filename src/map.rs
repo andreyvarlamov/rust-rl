@@ -31,7 +31,8 @@ pub struct Map {
     pub width : i32,
     pub height : i32,
     pub revealed_tiles : Vec<bool>,
-    pub visible_tiles : Vec<bool>
+    pub visible_tiles : Vec<bool>,
+    pub blocked : Vec<bool>
 }
 
 impl Map {
@@ -86,7 +87,8 @@ impl Map {
             width : 80,
             height : 50,
             revealed_tiles : vec![false; 80*50],
-            visible_tiles : vec![false; 80*50]
+            visible_tiles : vec![false; 80*50],
+            blocked : vec![false; 80*50]
         };
 
         // Make the boundary walls
@@ -126,7 +128,8 @@ impl Map {
             width : 80,
             height : 50,
             revealed_tiles : vec![false; 80*50],
-            visible_tiles : vec![false; 80*50]
+            visible_tiles : vec![false; 80*50],
+            blocked : vec![false; 80*50]
         };
         
         const MAX_ROOMS : i32 = 30;
@@ -209,9 +212,14 @@ impl Map {
         }
 
         let idx = self.xy_idx(x, y);
-        self.tiles[idx as usize] != TileType::Wall
+        !self.blocked[idx]
     }
 
+    pub fn populate_blocked(&mut self) {
+        for (i, tile) in self.tiles.iter_mut().enumerate() {
+            self.blocked[i] = *tile == TileType::Wall;
+        }
+    }
 }
 
 impl Algorithm2D for Map {

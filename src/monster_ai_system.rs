@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use super::{ Map, Monster, Name, Position, Viewshed };
-use rltk::{ a_star_search, console, Point };
+use rltk::{ a_star_search, console, DistanceAlg, Point };
 
 pub struct MonsterAI {}
 
@@ -27,11 +27,18 @@ impl<'a> System<'a> for MonsterAI {
             &name,
             &mut pos
         ).join() {
-            if viewshed.visible_tiles.contains(&*player_pos) {
-                console::log(
-                    &format!("{} shouts insults", name.name)
-                );
+            let distance = DistanceAlg::Pythagoras.distance2d(
+                Point::new(pos.x, pos.y),
+                *player_pos
+            );
 
+            if distance < 1.5 {
+                // Attack goes here
+                console::log(&format!("{} shouts insults", name.name));
+                return;
+            }
+
+            if viewshed.visible_tiles.contains(&*player_pos) {
                 let path = a_star_search(
                     map.xy_idx(pos.x, pos.y) as i32,
                     map.xy_idx(player_pos.x, player_pos.y) as i32,
