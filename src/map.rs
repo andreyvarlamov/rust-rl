@@ -3,6 +3,11 @@ use super::{ Rect };
 use std::cmp::{ max, min };
 use specs::prelude::*;
 
+// Consts
+const MAPWIDTH : usize = 80;
+const MAPHEIGHT : usize = 50;
+const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
+
 /* More derived features (from Rust itself)
    - Clone - adds .clone() method to type, allowing a copy to be made
      programmatically
@@ -72,24 +77,24 @@ impl Map {
         /*  vec! - procedural macro 
                  - allows to define a Vec with the same syntax as an array */
         let mut map = Map{
-            tiles : vec![TileType::Wall; 80*50],
+            tiles : vec![TileType::Wall; MAPCOUNT],
             rooms : Vec::new(),
-            width : 80,
-            height : 50,
-            revealed_tiles : vec![false; 80*50],
-            visible_tiles : vec![false; 80*50]
+            width : MAPWIDTH as i32,
+            height : MAPHEIGHT as i32,
+            revealed_tiles : vec![false; MAPCOUNT],
+            visible_tiles : vec![false; MAPCOUNT]
         };
 
         // Make the boundary walls
-        for x in 0..80 {
+        for x in 0..MAPWIDTH as i32 {
             let idx1 = map.xy_idx(x, 0);
-            let idx2 = map.xy_idx(x, 49);
+            let idx2 = map.xy_idx(x, MAPHEIGHT as i32 - 1);
             map.tiles[idx1] = TileType::Wall;
             map.tiles[idx2] = TileType::Wall;
         }
-        for y in 0..50 {
+        for y in 0..MAPHEIGHT as i32 {
             let idx1 = map.xy_idx(0, y);
-            let idx2 = map.xy_idx(79, y);
+            let idx2 = map.xy_idx(MAPWIDTH as i32 - 1, y);
             map.tiles[idx1] = TileType::Wall;
             map.tiles[idx2] = TileType::Wall;
         }
@@ -98,10 +103,13 @@ impl Map {
         let mut rng = RandomNumberGenerator::new();
 
         for _i in 0..400 {
-            let x = rng.roll_dice(1, 79);
-            let y = rng.roll_dice(1, 49);
+            let x = rng.roll_dice(1, MAPWIDTH as i32 - 1);
+            let y = rng.roll_dice(1, MAPHEIGHT as i32 - 1);
             let idx = map.xy_idx(x, y);
-            if idx != map.xy_idx(40, 25) {
+            if idx != map.xy_idx(
+                MAPWIDTH as i32 / 2,
+                MAPHEIGHT as i32 / 2
+            ) {
                 map.tiles[idx] = TileType::Wall;
             }
         }
@@ -112,12 +120,12 @@ impl Map {
     /// Map with a number of rooms connected with corridors
     pub fn new_map_rooms_and_corridors() -> Map {
         let mut map = Map{
-            tiles : vec![TileType::Wall; 80*50],
+            tiles : vec![TileType::Wall; MAPCOUNT],
             rooms : Vec::new(),
-            width : 80,
-            height : 50,
-            revealed_tiles : vec![false; 80*50],
-            visible_tiles : vec![false; 80*50]
+            width : MAPWIDTH as i32,
+            height : MAPHEIGHT as i32,
+            revealed_tiles : vec![false; MAPCOUNT],
+            visible_tiles : vec![false; MAPCOUNT]
         };
         
         const MAX_ROOMS : i32 = 30;
@@ -240,7 +248,7 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
         }
 
         x += 1;
-        if x > 79 {
+        if x > MAPWIDTH as i32 - 1 {
             x = 0;
             y += 1;
         }
