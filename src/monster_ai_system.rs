@@ -50,6 +50,11 @@ impl<'a> System<'a> for MonsterAI {
                 (target_x, target_y) = monster.memory;
             }
 
+            if target_x == pos.x && target_y == pos.y {
+                monster.memory = (-1, -1);
+                return;
+            }
+
             if target_x >= 0 && target_y >= 0 {
                 let path = a_star_search(
                     map.xy_idx(pos.x, pos.y) as i32,
