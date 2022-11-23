@@ -44,7 +44,9 @@ pub struct Viewshed {
 pub struct Player {}
 
 #[derive(Component, Debug)]
-pub struct Monster {}
+pub struct Monster {
+    pub memory : (i32, i32)
+}
 
 #[derive(Component, Debug)]
 pub struct Name {

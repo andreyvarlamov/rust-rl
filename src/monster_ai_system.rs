@@ -9,21 +9,21 @@ impl<'a> System<'a> for MonsterAI {
     type SystemData = (WriteExpect<'a, Map>,
                        ReadExpect<'a, Point>,
                        WriteStorage<'a, Viewshed>,
-                       ReadStorage<'a, Monster>,
+                       WriteStorage<'a, Monster>,
                        ReadStorage<'a, Name>,
                        WriteStorage<'a, Position>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, player_pos, mut viewshed, monster, name, mut pos) = data;
+        let (mut map, player_pos, mut viewshed, mut monster, name, mut pos) = data;
 
         for (
             mut viewshed,
-            _monster,
+            monster,
             name,
             mut pos
         ) in (
             &mut viewshed,
-            &monster,
+            &mut monster,
             &name,
             &mut pos
         ).join() {
@@ -38,10 +38,22 @@ impl<'a> System<'a> for MonsterAI {
                 return;
             }
 
+            let target_x : i32;
+            let target_y : i32;
+
             if viewshed.visible_tiles.contains(&*player_pos) {
+                target_x = player_pos.x;
+                target_y = player_pos.y;
+                monster.memory = (target_x, target_y);
+            }
+            else {
+                (target_x, target_y) = monster.memory;
+            }
+
+            if target_x >= 0 && target_y >= 0 {
                 let path = a_star_search(
                     map.xy_idx(pos.x, pos.y) as i32,
-                    map.xy_idx(player_pos.x, player_pos.y) as i32,
+                    map.xy_idx(target_x, target_y) as i32,
                     &mut *map
                 );
 

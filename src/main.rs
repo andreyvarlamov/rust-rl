@@ -143,7 +143,7 @@ fn main() -> rltk::BError {
                 fg : RGB::named(rltk::RED),
                 bg : RGB::named(rltk::BLACK),
             })
-            .with(Monster {})
+            .with(Monster { memory : (-1, -1) })
             .with(Name { name : format!("{} #{}", &name, i) })
             .with(Viewshed {
                 visible_tiles : Vec::new(),
