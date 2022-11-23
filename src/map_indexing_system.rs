@@ -13,6 +13,7 @@ impl<'a> System<'a> for MapIndexingSystem {
         let (mut map, pos, block, entity) = data;
 
         map.populate_blocked();
+        map.clear_content_index();
         for (entity, pos) in (&entity, &pos).join() {
             let idx = map.xy_idx(pos.x, pos.y);
 
