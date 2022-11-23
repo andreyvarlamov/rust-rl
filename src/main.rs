@@ -16,6 +16,10 @@ mod monster_ai_system;
 use monster_ai_system::MonsterAI;
 mod map_indexing_system;
 use map_indexing_system::MapIndexingSystem;
+mod melee_combat_system;
+use melee_combat_system::MeleeCombatSystem;
+mod damage_system;
+use damage_system::*;
 
 // Consts
 const SHOW_FPS : bool = false;
@@ -37,6 +41,11 @@ impl State {
         mob.run_now(&self.ecs);
         let mut map_index = MapIndexingSystem{};
         map_index.run_now(&self.ecs);
+        let mut melee_combat = MeleeCombatSystem{};
+        melee_combat.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
+        damage_system::delete_the_dead(&mut self.ecs);
         self.ecs.maintain();
     }
 }
@@ -100,6 +109,9 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Monster>();
     gs.ecs.register::<Name>();
     gs.ecs.register::<BlocksTile>();
+    gs.ecs.register::<CombatStats>();
+    gs.ecs.register::<SufferDamage>();
+    gs.ecs.register::<WantsToMelee>();
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -121,6 +133,7 @@ fn main() -> rltk::BError {
             range : 8,
             dirty : true
         })
+        .with(CombatStats { max_hp : 30, hp : 30, defense : 2, power : 5 })
         .build();
 
     let mut rng = rltk::RandomNumberGenerator::new();
@@ -151,6 +164,7 @@ fn main() -> rltk::BError {
                 dirty : true
             })
             .with(BlocksTile {})
+            .with(CombatStats { max_hp : 16, hp : 16, defense : 1, power : 4 })
             .build();
     }
 
