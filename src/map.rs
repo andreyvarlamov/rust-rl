@@ -138,7 +138,7 @@ impl Map {
             width : MAPWIDTH as i32,
             height : MAPHEIGHT as i32,
             revealed_tiles : vec![false; MAPCOUNT],
-            visible_tiles : vec![false; MAPCOUNT]
+            visible_tiles : vec![false; MAPCOUNT],
             blocked : vec![false; MAPCOUNT],
             tile_content: vec![Vec::new(); MAPCOUNT]
         };
