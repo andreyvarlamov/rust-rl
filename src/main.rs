@@ -20,6 +20,8 @@ mod melee_combat_system;
 use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
 use damage_system::*;
+mod gui;
+use gui::draw_ui;
 
 // Consts
 const SHOW_FPS : bool = false;
@@ -95,6 +97,8 @@ impl GameState for State {
                 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
             }
         }
+
+        draw_ui(&self.ecs, ctx);
 
         if SHOW_FPS {
             ctx.draw_box(39, 0, 20, 3,
