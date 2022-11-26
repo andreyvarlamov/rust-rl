@@ -1,4 +1,4 @@
-use rltk::{ Console, RGB, Rltk };
+use rltk::{ RGB, Rltk };
 use specs::prelude::*;
 use super::{ CombatStats, GameLog, Player };
 
