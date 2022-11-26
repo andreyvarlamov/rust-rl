@@ -22,6 +22,8 @@ mod damage_system;
 use damage_system::*;
 mod gui;
 use gui::draw_ui;
+mod gamelog;
+use gamelog::GameLog;
 
 // Consts
 const SHOW_FPS : bool = false;
@@ -195,6 +197,7 @@ fn main() -> rltk::BError {
     gs.ecs.insert(RunState::PreRun);
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
+    gs.ecs.insert(gamelog::GameLog { entries : vec!["Hello".to_string()] });
 
     rltk::main_loop(context, gs)
 }
