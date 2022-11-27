@@ -172,9 +172,8 @@ fn main() -> rltk::BError {
 
     let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
 
-    for (i, room) in map.rooms.iter().skip(1).enumerate() {
-        let (x, y) = room.center();
-        spawner::random_monster(&mut gs.ecs, x, y, i);
+    for room in map.rooms.iter().skip(1) {
+        spawner::spawn_room(&mut gs.ecs, room);
     }
 
     gs.ecs.insert(map);

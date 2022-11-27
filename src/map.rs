@@ -13,9 +13,9 @@ use std::cmp::{ max, min };
 use specs::prelude::*;
 
 // Consts
-const MAPWIDTH : usize = 80;
-const MAPHEIGHT : usize = 43;
-const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
+pub const MAPWIDTH : usize = 80;
+pub const MAPHEIGHT : usize = 43;
+pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
 
 /* More derived features (from Rust itself)
    - Clone - adds .clone() method to type, allowing a copy to be made
