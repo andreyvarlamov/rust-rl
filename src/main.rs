@@ -122,6 +122,7 @@ fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
+        .with_tile_dimensions(20, 20)
         .build()?;
     let mut gs = State{
         ecs : World::new()
@@ -148,7 +149,7 @@ fn main() -> rltk::BError {
         .with(Position { x : player_x, y : player_y })
         .with(Renderable {
             glyph : rltk::to_cp437('@'),
-            fg : RGB::named(rltk::YELLOW),
+            fg : RGB::named(rltk::BLUE),
             bg : RGB::named(rltk::BLACK),
         })
         .with(Player{})
