@@ -16,7 +16,7 @@ use super::{
 };
 
 const MAX_MONSTERS : i32 = 4;
-const MAX_ITEMS : i32 = 2;
+const MAX_ITEMS : i32 = 5;
 
 pub fn player(ecs : &mut World, x : i32, y : i32) -> Entity {
     ecs
