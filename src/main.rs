@@ -21,12 +21,11 @@ use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
 use damage_system::*;
 mod gui;
-use gui::draw_ui;
 mod gamelog;
 use gamelog::GameLog;
 mod spawner;
 mod inventory_system;
-use inventory_system::ItemCollectionSystem;
+use inventory_system::*;
 
 // Consts
 const SHOW_FPS : bool = false;
@@ -53,6 +52,8 @@ impl State {
         damage.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
         pickup.run_now(&self.ecs);
+        let mut potions = PotionUseSystem{};
+        potions.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -85,8 +86,19 @@ impl GameState for State {
                 newrunstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
-                if gui::show_inventory(self, ctx) == gui::ItemMenuResult::Cancel {
-                    newrunstate = RunState::AwaitingInput;
+                let result = gui::show_inventory(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = result.1.unwrap();
+                        let mut intent = self.ecs.write_storage::<WantsToDrinkPotion>();
+                        intent.insert(
+                            *self.ecs.fetch::<Entity>(),
+                            WantsToDrinkPotion{ potion : item_entity }
+                        ).expect("Unable to insert intent");
+                        newrunstate = RunState::PlayerTurn;
+                    }
                 }
             }
         }
@@ -110,7 +122,7 @@ impl GameState for State {
             }
         }
 
-        draw_ui(&self.ecs, ctx);
+        gui::draw_ui(&self.ecs, ctx);
 
         if SHOW_FPS {
             ctx.draw_box(39, 0, 20, 3,
@@ -154,6 +166,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Potion>();
     gs.ecs.register::<InBackpack>();
     gs.ecs.register::<WantsToPickupItem>();
+    gs.ecs.register::<WantsToDrinkPotion>();
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     gs.ecs.insert(RunState::PreRun);
