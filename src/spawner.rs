@@ -26,6 +26,7 @@ pub fn player(ecs : &mut World, x : i32, y : i32) -> Entity {
             glyph : rltk::to_cp437('@'),
             fg : RGB::named(rltk::BLUE),
             bg : RGB::named(rltk::BLACK),
+            render_order : 0
         })
         .with(Player{})
         .with(Name { name : "Player".to_string() })
@@ -73,6 +74,7 @@ fn monster(
             glyph : rltk::to_cp437(glyph_char),
             fg : RGB::named(rltk::RED),
             bg : RGB::named(rltk::BLACK),
+            render_order : 1
         })
         .with(Monster {})
         .with(Name { name : format!("{}", &name.to_string()) })
@@ -146,7 +148,8 @@ fn health_potion(ecs : &mut World, x : i32, y : i32) {
         .with(Renderable {
             glyph : rltk::to_cp437('¡'),
             fg : RGB::named(rltk::MAGENTA),
-            bg : RGB::named(rltk::BLACK)
+            bg : RGB::named(rltk::BLACK),
+            render_order : 2
         })
         .with(Name{ name : "Health Potion".to_string() })
         .with(Item{})
