@@ -1,53 +1,17 @@
 use rltk::{ RGB, Rltk, VirtualKeyCode };
 use specs::prelude::*;
-use super::{ CombatStats, GameLog, InBackpack, Map, Name, Player, Point, Position, State };
-
-pub fn draw_ui(ecs : &World, ctx : &mut Rltk) {
-    ctx.draw_box(
-        0,
-        43,
-        79,
-        6,
-        RGB::named(rltk::WHITE),
-        RGB::named(rltk::BLACK)
-    );
-
-    let combat_stats = ecs.read_storage::<CombatStats>();
-    let players = ecs.read_storage::<Player>();
-    for (_player, stats) in (&players, &combat_stats).join() {
-        let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
-        ctx.print_color(
-            12,
-            43,
-            RGB::named(rltk::YELLOW),
-            RGB::named(rltk::BLACK),
-            &health
-        );
-
-        ctx.draw_bar_horizontal(
-            28,
-            43,
-            51,
-            stats.hp,
-            stats.max_hp,
-            RGB::named(rltk::RED),
-            RGB::named(rltk::BLACK)
-        );
-    }
-
-    let log = ecs.fetch::<GameLog>();
-
-    let mut y = 44;
-    for s in log.entries.iter().rev() {
-        if y < 49 { ctx.print(2, y, s); }
-        y += 1;
-    }
-
-    let mouse_pos = ctx.mouse_pos();
-    ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::MAGENTA));
-
-    draw_tooltips(ecs, ctx);
-}
+use super::{
+    CombatStats,
+    GameLog,
+    InBackpack,
+    Map,
+    Name,
+    Player,
+    Point,
+    Position,
+    State,
+    Viewshed
+};
 
 fn draw_tooltips(ecs : &World, ctx : &mut Rltk) {
     let map = ecs.fetch::<Map>();
@@ -138,6 +102,53 @@ fn draw_tooltips(ecs : &World, ctx : &mut Rltk) {
             );
         }
     }
+}
+
+pub fn draw_ui(ecs : &World, ctx : &mut Rltk) {
+    ctx.draw_box(
+        0,
+        43,
+        79,
+        6,
+        RGB::named(rltk::WHITE),
+        RGB::named(rltk::BLACK)
+    );
+
+    let combat_stats = ecs.read_storage::<CombatStats>();
+    let players = ecs.read_storage::<Player>();
+    for (_player, stats) in (&players, &combat_stats).join() {
+        let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
+        ctx.print_color(
+            12,
+            43,
+            RGB::named(rltk::YELLOW),
+            RGB::named(rltk::BLACK),
+            &health
+        );
+
+        ctx.draw_bar_horizontal(
+            28,
+            43,
+            51,
+            stats.hp,
+            stats.max_hp,
+            RGB::named(rltk::RED),
+            RGB::named(rltk::BLACK)
+        );
+    }
+
+    let log = ecs.fetch::<GameLog>();
+
+    let mut y = 44;
+    for s in log.entries.iter().rev() {
+        if y < 49 { ctx.print(2, y, s); }
+        y += 1;
+    }
+
+    let mouse_pos = ctx.mouse_pos();
+    ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::MAGENTA));
+
+    draw_tooltips(ecs, ctx);
 }
 
 #[derive(PartialEq, Copy, Clone)]
@@ -241,4 +252,49 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
             }
         }
     }
+}
+
+pub fn ranged_target(gs : &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenuResult, Option<Point>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let player_pos = gs.ecs.fetch::<Point>();
+    let viewsheds = gs.ecs.read_storage::<Viewshed>();
+
+    ctx.print_color(5, 0, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Select Target:");
+
+    // Highlight available target cells
+    let mut available_cells = Vec::new();
+    let visible = viewsheds.get(*player_entity);
+    if let Some(visible) = visible {
+        for idx in visible.visible_tiles.iter() {
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, *idx);
+            if distance <= range as f32 {
+                ctx.set_bg(idx.x, idx.y, RGB::named(rltk::BLUE));
+                available_cells.push(idx);
+            }
+        }
+    } else {
+        return (ItemMenuResult::Cancel, None);
+    }
+
+    // Draw mouse cursor
+    let mouse_pos = ctx.mouse_pos();
+    let mut valid_target = false;
+    for idx in available_cells.iter() {
+        if idx.x == mouse_pos.0 && idx.y == mouse_pos.1 {
+            valid_target = true;
+        }
+    }
+    if valid_target {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::CYAN));
+        if ctx.left_click {
+            return (ItemMenuResult::Selected, Some(Point::new(mouse_pos.0, mouse_pos.1)));
+        }
+    } else {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::RED));
+        if ctx.left_click {
+            return (ItemMenuResult::Cancel, None);
+        }
+    }
+
+    return (ItemMenuResult::NoResponse, None);
 }

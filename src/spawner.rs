@@ -27,7 +27,7 @@ pub fn player(ecs : &mut World, x : i32, y : i32) -> Entity {
         .with(Position { x, y })
         .with(Renderable {
             glyph : rltk::to_cp437('@'),
-            fg : RGB::named(rltk::BLUE),
+            fg : RGB::named(rltk::YELLOW),
             bg : RGB::named(rltk::BLACK),
             render_order : 0
         })

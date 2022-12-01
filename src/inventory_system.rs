@@ -4,9 +4,12 @@ use super::{
     Consumable,
     gamelog::GameLog,
     InBackpack,
+    InflictsDamage,
+    Map,
     Name,
     Position,
     ProvidesHealing,
+    SufferDamage,
     WantsToUseItem,
     WantsToDropItem,
     WantsToPickupItem
@@ -52,17 +55,21 @@ pub struct ItemUseSystem {}
 
 impl<'a> System<'a> for ItemUseSystem {
     #[allow(clippy::type_complexity)]
-    type SystemData = (ReadExpect<'a, Entity>,
+    type SystemData = (WriteExpect<'a, Map>,
+                       ReadExpect<'a, Entity>,
                        WriteExpect<'a, GameLog>,
                        Entities<'a>,
                        WriteStorage<'a, WantsToUseItem>,
                        ReadStorage<'a, Name>,
                        ReadStorage<'a, Consumable>,
                        ReadStorage<'a, ProvidesHealing>,
-                       WriteStorage<'a, CombatStats>);
+                       ReadStorage<'a, InflictsDamage>,
+                       WriteStorage<'a, CombatStats>,
+                       WriteStorage<'a, SufferDamage>);
 
     fn run(&mut self, data : Self::SystemData) {
         let (
+            map,
             player_entity,
             mut gamelog,
             entities,
@@ -70,10 +77,14 @@ impl<'a> System<'a> for ItemUseSystem {
             names,
             consumables,
             healing,
-            mut combat_stats
+            damaging,
+            mut combat_stats,
+            mut suffer_damage
         ) = data;
 
         for (entity, useitem, stats) in (&entities, &wants_use, &mut combat_stats).join() {
+            let mut used_item = true;
+
             // If item heals, apply the healing
             let item_heals = healing.get(useitem.item);
             match item_heals {
@@ -87,6 +98,35 @@ impl<'a> System<'a> for ItemUseSystem {
                     }
                 }
             }
+
+            // If it inflicts damage, apply it to the target cell
+            let item_damages = damaging.get(useitem.item);
+            match item_damages {
+                None => {}
+                Some(damage) => {
+                    let target_point = useitem.target.unwrap();
+                    let idx = map.xy_idx(target_point.x, target_point.y);
+                    used_item = false;
+                    for mob in map.tile_content[idx].iter() {
+                        SufferDamage::new_damage(&mut suffer_damage, *mob, damage.damage);
+                        if entity == *player_entity {
+                            let mob_name = names.get(*mob).unwrap();
+                            let item_name = names.get(useitem.item).unwrap();
+                            gamelog.entries.push(
+                                format!(
+                                    "You use {} on {}, inflicting {} hp.",
+                                    item_name.name,
+                                    mob_name.name,
+                                    damage.damage
+                                )
+                            );
+                        }
+
+                        used_item = true;
+                    }
+                }
+            }
+
 
             // Remove consumable after its use
             let consumable = consumables.get(useitem.item);
