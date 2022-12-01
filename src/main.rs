@@ -31,7 +31,14 @@ use inventory_system::*;
 const SHOW_FPS : bool = false;
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn, ShowInventory }
+pub enum RunState {
+    AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem
+}
 
 // Struct State - a class
 pub struct State {
@@ -54,6 +61,8 @@ impl State {
         pickup.run_now(&self.ecs);
         let mut potions = PotionUseSystem{};
         potions.run_now(&self.ecs);
+        let mut drop_items = ItemDropSystem{};
+        drop_items.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -96,6 +105,22 @@ impl GameState for State {
                         intent.insert(
                             *self.ecs.fetch::<Entity>(),
                             WantsToDrinkPotion{ potion : item_entity }
+                        ).expect("Unable to insert intent");
+                        newrunstate = RunState::PlayerTurn;
+                    }
+                }
+            }
+            RunState::ShowDropItem => {
+                let result = gui::drop_item_menu(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = result.1.unwrap();
+                        let mut intent = self.ecs.write_storage::<WantsToDropItem>();
+                        intent.insert(
+                            *self.ecs.fetch::<Entity>(),
+                            WantsToDropItem{ item : item_entity }
                         ).expect("Unable to insert intent");
                         newrunstate = RunState::PlayerTurn;
                     }
@@ -167,6 +192,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<InBackpack>();
     gs.ecs.register::<WantsToPickupItem>();
     gs.ecs.register::<WantsToDrinkPotion>();
+    gs.ecs.register::<WantsToDropItem>();
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     gs.ecs.insert(RunState::PreRun);
