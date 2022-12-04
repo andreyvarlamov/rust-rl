@@ -2,6 +2,7 @@ use specs::prelude::*;
 use super::{
     AreaOfEffect,
     CombatStats,
+    Confusion,
     Consumable,
     gamelog::GameLog,
     InBackpack,
@@ -65,6 +66,7 @@ impl<'a> System<'a> for ItemUseSystem {
                        ReadStorage<'a, Consumable>,
                        ReadStorage<'a, ProvidesHealing>,
                        ReadStorage<'a, InflictsDamage>,
+                       WriteStorage<'a, Confusion>,
                        WriteStorage<'a, CombatStats>,
                        WriteStorage<'a, SufferDamage>,
                        WriteStorage<'a, AreaOfEffect>);
@@ -80,6 +82,7 @@ impl<'a> System<'a> for ItemUseSystem {
             consumables,
             healing,
             damaging,
+            mut confused,
             mut combat_stats,
             mut suffer_damage,
             aoe
@@ -166,13 +169,43 @@ impl<'a> System<'a> for ItemUseSystem {
                 }
             }
 
+            let mut add_confusion = Vec::new();
+            {
+                let causes_confusion = confused.get(useitem.item);
+                match causes_confusion {
+                    None => {}
+                    Some(confusion) => {
+                        used_item = false;
+                        for mob in targets.iter() {
+                            add_confusion.push((*mob, confusion.turns));
+                            if entity == *player_entity {
+                                let mob_name = names.get(*mob).unwrap();
+                                let item_name = names.get(useitem.item).unwrap();
+                                gamelog.entries.push(
+                                    format!(
+                                        "You use {} on {}, confusing them.",
+                                        item_name.name,
+                                        mob_name.name
+                                    )
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
+            for mob in add_confusion.iter() {
+                confused.insert(mob.0, Confusion{ turns : mob.1 }).expect("Unable to insert status"); 
+            }
 
             // Remove consumable after its use
-            let consumable = consumables.get(useitem.item);
-            match consumable {
-                None => {}
-                Some(_) => {
-                    entities.delete(useitem.item).expect("Delete failed");
+            if used_item {
+                let consumable = consumables.get(useitem.item);
+                match consumable {
+                    None => {}
+                    Some(_) => {
+                        entities.delete(useitem.item).expect("Delete failed");
+                    }
                 }
             }
         }
