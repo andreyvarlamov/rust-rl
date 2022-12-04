@@ -198,6 +198,7 @@ impl GameState for State {
                             gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
                             gui::MainMenuSelection::LoadGame => {
                                 saveload_system::load_game(&mut self.ecs);
+                                self.run_systems();
                                 newrunstate = RunState::AwaitingInput;
                                 saveload_system::delete_save();
                             }
