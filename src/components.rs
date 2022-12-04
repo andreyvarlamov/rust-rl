@@ -1,9 +1,13 @@
+use serde::{ Serialize, Deserialize };
+use specs::error::NoError;
+use specs::saveload::{ Marker, ConvertSaveload };
 use specs::prelude::*;
 use specs_derive::*;
 use rltk::{ RGB, Point };
 
 pub struct SerializeMe;
 
+//
 /* POD (Plain Old Data) - no logic - "pure" ECS
    2 reasons to use this model:
    1) keeps all the logic code in "systems" part of ECS
@@ -18,16 +22,22 @@ pub struct SerializeMe;
 // impl Component for Position {
 //     type Storage = VecStorage<Self>;
 // }
+//
 
 // Using specs-derive
 // A derive macro: "from ths basic data derive the boilerplate needed for Component"
-#[derive(Component)] 
+// #[derive(Component)]
+// Component - it's a specs component
+// ConvertSaveload - adding serde Serialize and Deserialzie, but with extra conversion
+// for any Entity classes it encounters
+// Clone - Add a .clone() method to the struct to create a perfect copy in memory
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Position {
     pub x: i32,
     pub y: i32
 }
 
-#[derive(Component)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Renderable {
     pub glyph: rltk::FontCharType,
     pub fg: RGB,
@@ -35,29 +45,30 @@ pub struct Renderable {
     pub render_order : i32
 }
 
-#[derive(Component)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Viewshed {
     pub visible_tiles : Vec<Point>,
     pub range : i32,
     pub dirty : bool
 }
 
-#[derive(Component, Debug)]
+// ConvertSaveload macro doesn't work for tag components, so revert to default Serde syntax
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 // Component with no data - "tag component"
 pub struct Player {}
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Monster {}
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Name {
     pub name : String
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct BlocksTile {}
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct CombatStats {
     pub max_hp : i32,
     pub hp : i32,
@@ -65,13 +76,12 @@ pub struct CombatStats {
     pub power : i32
 }
 
-//#[derive(Component, Debug, ConvertSaveload, Clone)]
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToMelee {
     pub target : Entity
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct SufferDamage {
     pub amount : Vec<i32>
 }
@@ -87,55 +97,55 @@ impl SufferDamage {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Item {}
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct ProvidesHealing {
     pub heal_amount : i32
 }
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct InBackpack {
     pub owner : Entity
 }
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToPickupItem {
     pub collected_by : Entity,
     pub item : Entity
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToUseItem {
     pub item : Entity,
     pub target : Option<rltk::Point>
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToDropItem {
     pub item : Entity
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Consumable {}
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Ranged {
     pub range : i32
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct InflictsDamage {
     pub damage : i32
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct AreaOfEffect {
     pub radius : i32
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Confusion {
     pub turns : i32
 }
