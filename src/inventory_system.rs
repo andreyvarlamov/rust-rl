@@ -4,6 +4,8 @@ use super::{
     CombatStats,
     Confusion,
     Consumable,
+    Equippable,
+    Equipped,
     gamelog::GameLog,
     InBackpack,
     InflictsDamage,
@@ -69,7 +71,10 @@ impl<'a> System<'a> for ItemUseSystem {
                        WriteStorage<'a, Confusion>,
                        WriteStorage<'a, CombatStats>,
                        WriteStorage<'a, SufferDamage>,
-                       WriteStorage<'a, AreaOfEffect>);
+                       WriteStorage<'a, AreaOfEffect>,
+                       ReadStorage<'a, Equippable>,
+                       WriteStorage<'a, Equipped>,
+                       WriteStorage<'a, InBackpack>);
 
     fn run(&mut self, data : Self::SystemData) {
         let (
@@ -85,7 +90,10 @@ impl<'a> System<'a> for ItemUseSystem {
             mut confused,
             mut combat_stats,
             mut suffer_damage,
-            aoe
+            aoe,
+            equippable,
+            mut equipped,
+            mut backpack
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -197,6 +205,41 @@ impl<'a> System<'a> for ItemUseSystem {
 
             for mob in add_confusion.iter() {
                 confused.insert(mob.0, Confusion{ turns : mob.1 }).expect("Unable to insert status"); 
+            }
+
+            // If item is equippable, unequip whatever is in the same slot, and equip this one
+            let item_equippable = equippable.get(useitem.item);
+            match item_equippable {
+                None => {}
+                Some(can_equip) => {
+                    let target_slot = can_equip.slot;
+                    let target = targets[0];
+
+                    // Remove any items the target has in the item's slot
+                    let mut to_unequip : Vec<Entity> = Vec::new();
+                    for (item_entity, already_equipped, name) in (&entities, &equipped, &names).join() {
+                        if already_equipped.owner == target && already_equipped.slot == target_slot {
+                            to_unequip.push(item_entity);
+                            if target == *player_entity {
+                                gamelog.entries.push(format!("You unequip {}.", name.name));
+                            }
+                        }
+                    }
+
+                    for item in to_unequip.iter() {
+                        equipped.remove(*item);
+                        backpack.insert(*item, InBackpack{ owner : target })
+                            .expect("Unable to insert backpack entry");
+                    }
+
+                    // Wield the item
+                    equipped.insert(useitem.item, Equipped{ owner : target, slot : target_slot })
+                        .expect("Unable to insert equipped component");
+                    backpack.remove(useitem.item);
+                    if target == *player_entity {
+                        gamelog.entries.push(format!("You equip {}.", names.get(useitem.item).unwrap().name));
+                    }
+                }
             }
 
             // Remove consumable after its use
