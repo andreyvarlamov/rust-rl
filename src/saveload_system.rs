@@ -46,7 +46,7 @@ pub fn save_game(ecs : &mut World) {
                                 WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
                                 AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem,
                                 WantsToUseItem, WantsToDropItem, SerializationHelper,
-                                Equippable, Equipped);
+                                Equippable, Equipped, MeleePowerBonus, DefenseBonus);
     }
 
     // Clean up
@@ -99,7 +99,7 @@ pub fn load_game(ecs : &mut World) {
                                   Item, Consumable, Ranged, InflictsDamage, AreaOfEffect,
                                   Confusion, ProvidesHealing, InBackpack, WantsToPickupItem,
                                   WantsToUseItem, WantsToDropItem, SerializationHelper,
-                                  Equippable, Equipped);
+                                  Equippable, Equipped, MeleePowerBonus, DefenseBonus);
     }
 
     let mut deleteme : Option<Entity> = None;
