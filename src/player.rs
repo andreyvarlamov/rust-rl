@@ -180,6 +180,7 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                     return RunState::NextLevel;
                 }
             }
+            VirtualKeyCode::R => return RunState::ShowRemoveItem,
 
             // Skip turn
             VirtualKeyCode::Numpad5 |
