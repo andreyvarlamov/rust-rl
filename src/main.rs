@@ -2,6 +2,7 @@ extern crate serde;
 
 use rltk::{ GameState, Point, Rltk, RGB, TextAlign };
 use specs::prelude::*;
+use specs::saveload::{ SimpleMarker, SimpleMarkerAllocator };
 
 // Crate files
 mod components;
@@ -263,9 +264,12 @@ fn main() -> rltk::BError {
     gs.ecs.register::<AreaOfEffect>();
     gs.ecs.register::<Confusion>();
 
+    gs.ecs.register::<SimpleMarker<SerializeMe>>();
+
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     gs.ecs.insert(RunState::MainMenu{ menu_selection : gui::MainMenuSelection::NewGame });
     gs.ecs.insert(GameLog { entries : vec!["Hello".to_string()] });
+    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     let map : Map = Map::new_map_rooms_and_corridors();
 

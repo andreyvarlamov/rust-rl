@@ -2,6 +2,8 @@ use specs::prelude::*;
 use specs_derive::*;
 use rltk::{ RGB, Point };
 
+pub struct SerializeMe;
+
 /* POD (Plain Old Data) - no logic - "pure" ECS
    2 reasons to use this model:
    1) keeps all the logic code in "systems" part of ECS
