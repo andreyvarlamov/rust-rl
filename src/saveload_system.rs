@@ -1,6 +1,12 @@
 use specs::prelude::*;
 use specs::error::{ NoError };
-use specs::saveload::{ MarkedBuilder, SimpleMarker, SimpleMarkerAllocator, SerializeComponents };
+use specs::saveload::{
+    DeserializeComponents,
+    MarkedBuilder,
+    SimpleMarker,
+    SimpleMarkerAllocator,
+    SerializeComponents
+};
 use std::fs;
 use std::fs::File;
 use std::path::Path;
@@ -44,4 +50,76 @@ pub fn save_game(ecs : &mut World) {
 
     // Clean up
     ecs.delete_entity(savehelper).expect("Crash on cleanup");
+}
+
+pub fn does_save_exist() -> bool {
+    return Path::new("./savegame.json").exists();
+}
+
+macro_rules! deserialize_individually {
+    ($ecs:expr, $de:expr, $data:expr, $( $type:ty),*) => {
+        $(
+            DeserializeComponents::<NoError, _>::deserialize(
+                &mut ( &mut $ecs.write_storage::<$type>(), ),
+                &mut $data.0, // entities
+                &mut $data.1, // marker
+                &mut $data.2, // allocator
+                &mut $de,
+            )
+            .unwrap();
+        )*
+    };
+}
+
+pub fn load_game(ecs : &mut World) {
+    {
+        // Delete everything
+        let mut to_delete = Vec::new();
+        for e in ecs.entities().join() {
+            to_delete.push(e);
+        }
+        for del in to_delete.iter() {
+            ecs.delete_entity(*del).expect("Deletion failed");
+        }
+    }
+
+    let file_data = fs::read_to_string("./savegame.json").unwrap();
+    let mut deserializer = serde_json::Deserializer::from_str(&file_data);
+
+    {
+        let mut data = (
+            &mut ecs.entities(),
+            &mut ecs.write_storage::<SimpleMarker<SerializeMe>>(),
+            &mut ecs.write_resource::<SimpleMarkerAllocator<SerializeMe>>()
+        );
+
+        deserialize_individually!(ecs, deserializer, data, Position, Renderable, Player, Viewshed,
+                                  Monster, Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee,
+                                  Item, Consumable, Ranged, InflictsDamage, AreaOfEffect,
+                                  Confusion, ProvidesHealing, InBackpack, WantsToPickupItem,
+                                  WantsToUseItem, WantsToDropItem, SerializationHelper);
+    }
+
+    let mut deleteme : Option<Entity> = None;
+
+    {
+        let entities = ecs.entities();
+        let helper = ecs.read_storage::<SerializationHelper>();
+        let player = ecs.read_storage::<Player>();
+        let position = ecs.read_storage::<Position>();
+        for (e, h) in (&entities, &helper).join() {
+            let mut worldmap = ecs.write_resource::<super::map::Map>();
+            *worldmap = h.map.clone();
+            worldmap.tile_content = vec![Vec::new(); super::map::MAPCOUNT];
+            deleteme = Some(e);
+        }
+        for (e, _p, pos) in (&entities, &player, &position).join() {
+            let mut ppos = ecs.write_resource::<rltk::Point>();
+            *ppos = rltk::Point::new(pos.x, pos.y);
+            let mut player_resource = ecs.write_resource::<Entity>();
+            *player_resource = e;
+        }
+    }
+
+    ecs.delete_entity(deleteme.unwrap()).expect("Unable to delete helper");
 }

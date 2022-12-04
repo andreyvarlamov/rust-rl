@@ -189,6 +189,7 @@ impl<'a> System<'a> for ItemUseSystem {
                                     )
                                 );
                             }
+                            used_item = true;
                         }
                     }
                 }
