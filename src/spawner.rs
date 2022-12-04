@@ -57,7 +57,10 @@ fn monster(
     x : i32,
     y : i32,
     glyph_char : char,
-    name : &str
+    name : &str,
+    max_hp : i32,
+    defense : i32,
+    power : i32
 ) {
     ecs
         .create_entity()
@@ -76,17 +79,17 @@ fn monster(
             dirty : true
         })
         .with(BlocksTile {})
-        .with(CombatStats { max_hp : 16, hp : 16, defense : 1, power : 4 })
+        .with(CombatStats { max_hp, hp : max_hp, defense, power })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 
 fn orc(ecs : &mut World, x : i32, y : i32) {
-    monster(ecs, x, y, 'o', "Orc");
+    monster(ecs, x, y, 'o', "Orc", 30, 4, 8);
 }
 
 fn goblin(ecs : &mut World, x : i32, y : i32) {
-    monster(ecs, x, y, 'g', "Goblin");
+    monster(ecs, x, y, 'g', "Goblin", 16, 1, 4);
 }
 
 fn health_potion(ecs : &mut World, x : i32, y : i32) {
