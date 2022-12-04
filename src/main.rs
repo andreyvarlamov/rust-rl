@@ -38,7 +38,8 @@ pub enum RunState {
     MonsterTurn,
     ShowInventory,
     ShowDropItem,
-    ShowTargeting { range : i32, item : Entity }
+    ShowTargeting { range : i32, item : Entity },
+    MainMenu { menu_selection : gui::MainMenuSelection }
 }
 
 // Struct State - a class
@@ -77,49 +78,38 @@ impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
 
-        // Layer 1 - Draw Map
-        draw_map(&self.ecs, ctx);
-
-        // Layer 2 - Draw UI (bottom)
-        {
-            let positions = self.ecs.read_storage::<Position>();
-            let renderables = self.ecs.read_storage::<Renderable>();
-            let map = self.ecs.fetch::<Map>();
-
-            let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
-            data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
-            for (pos, render) in data.iter() {
-                let idx = map.xy_idx(pos.x, pos.y);
-                if map.visible_tiles[idx] {
-                    ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
-                }
-            }
-
-            gui::draw_ui(&self.ecs, ctx);
-        }
-
-        // Layer 3 - Draw FPS
-        if SHOW_FPS {
-            ctx.draw_box(39, 0, 20, 3,
-                         RGB::named(rltk::WHITE),
-                         RGB::named(rltk::BLACK)
-            );
-            ctx.printer(
-                58,
-                1,
-                &format!("#[pink]FPS: #[]{}", ctx.fps),
-                TextAlign::Right,
-                None,
-            );
-        }
-
-        // Layer 4 - depending on RunState draw menus on top
         let mut newrunstate;
         {
             let runstate = self.ecs.fetch::<RunState>();
             newrunstate = *runstate;
         }
 
+        // Draw different base screens depending on current state
+        match newrunstate {
+            RunState::MainMenu{..} => {}
+            _ => {
+                draw_map(&self.ecs, ctx);
+
+                {
+                    let positions = self.ecs.read_storage::<Position>();
+                    let renderables = self.ecs.read_storage::<Renderable>();
+                    let map = self.ecs.fetch::<Map>();
+
+                    let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+                    data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
+                    for (pos, render) in data.iter() {
+                        let idx = map.xy_idx(pos.x, pos.y);
+                        if map.visible_tiles[idx] {
+                            ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+                        }
+                    }
+
+                    gui::draw_ui(&self.ecs, ctx);
+                }
+            }
+        }
+
+        // Main Game State Machine
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();
@@ -192,6 +182,35 @@ impl GameState for State {
                     }
                 }
             }
+            RunState::MainMenu{..} => {
+                let result = gui::main_menu(self, ctx);
+                match result {
+                    gui::MainMenuResult::NoSelection{ selected } => {
+                        newrunstate = RunState::MainMenu{ menu_selection : selected }
+                    }
+                    gui::MainMenuResult::Selected{ selected } => {
+                        match selected {
+                            gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::LoadGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::Quit => { ::std::process::exit(0); }
+                        }
+                    }
+                }
+            }
+        }
+
+        if SHOW_FPS {
+            ctx.draw_box(39, 0, 20, 3,
+                         RGB::named(rltk::WHITE),
+                         RGB::named(rltk::BLACK)
+            );
+            ctx.printer(
+                58,
+                1,
+                &format!("#[pink]FPS: #[]{}", ctx.fps),
+                TextAlign::Right,
+                None,
+            );
         }
 
         {
@@ -236,7 +255,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Confusion>();
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
-    gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(RunState::MainMenu{ menu_selection : gui::MainMenuSelection::NewGame });
     gs.ecs.insert(GameLog { entries : vec!["Hello".to_string()] });
 
     let map : Map = Map::new_map_rooms_and_corridors();
