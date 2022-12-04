@@ -362,6 +362,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<AreaOfEffect>();
     gs.ecs.register::<Confusion>();
     gs.ecs.register::<Equippable>();
+    gs.ecs.register::<Equipped>();
 
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
     gs.ecs.register::<SerializationHelper>();
