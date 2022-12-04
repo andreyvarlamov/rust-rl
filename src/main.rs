@@ -1,3 +1,5 @@
+extern crate serde;
+
 use rltk::{ GameState, Point, Rltk, RGB, TextAlign };
 use specs::prelude::*;
 
@@ -39,7 +41,8 @@ pub enum RunState {
     ShowInventory,
     ShowDropItem,
     ShowTargeting { range : i32, item : Entity },
-    MainMenu { menu_selection : gui::MainMenuSelection }
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame
 }
 
 // Struct State - a class
@@ -196,6 +199,12 @@ impl GameState for State {
                         }
                     }
                 }
+            }
+            RunState::SaveGame => {
+                let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
+                println!("{}", data);
+
+                newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame }
             }
         }
 

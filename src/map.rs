@@ -8,9 +8,10 @@ use rltk::{
     Rltk,
     SmallVec
 };
-use super::{ Rect };
-use std::cmp::{ max, min };
+use serde::{ Serialize, Deserialize };
 use specs::prelude::*;
+use std::cmp::{ max, min };
+use super::{ Rect };
 
 // Consts
 pub const MAPWIDTH : usize = 80;
@@ -25,11 +26,12 @@ pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
      a "moved from" state
    - PartialEq - allows to use == to see if two tile types match 
      Otherwise tile_type == TileType::Wall wouldn't compile */
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum TileType {
     Wall, Floor
 }
 
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
     pub tiles : Vec<TileType>,
     pub rooms : Vec<Rect>,
@@ -38,6 +40,9 @@ pub struct Map {
     pub revealed_tiles : Vec<bool>,
     pub visible_tiles : Vec<bool>,
     pub blocked : Vec<bool>,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
     pub tile_content : Vec<Vec<Entity>>
 }
 
