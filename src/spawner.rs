@@ -173,7 +173,7 @@ fn dagger(ecs : &mut World, x : i32, y : i32) {
         .with(Name{ name : "Dagger".to_string() })
         .with(Item{})
         .with(Equippable{ slot : EquipmentSlot::Melee })
-        .with(MeleePowerBonus{ power : 10 })
+        .with(MeleePowerBonus{ power : 2 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -190,22 +190,57 @@ fn shield(ecs : &mut World, x : i32, y : i32) {
         .with(Name{ name : "Shield".to_string() })
         .with(Item{})
         .with(Equippable{ slot : EquipmentSlot::Shield })
-        .with(DefenseBonus{ defense : 2 })
+        .with(DefenseBonus{ defense : 1 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 
+fn longsword(ecs : &mut World, x : i32, y : i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph : rltk::to_cp437('/'),
+            fg : RGB::named(rltk::GOLD1),
+            bg : RGB::named(rltk::ORANGE4),
+            render_order : 2
+        })
+        .with(Name{ name : "Longsword".to_string() })
+        .with(Item{})
+        .with(Equippable{ slot : EquipmentSlot::Melee })
+        .with(MeleePowerBonus{ power : 4 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn tower_shield(ecs : &mut World, x : i32, y : i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph : rltk::to_cp437('('),
+            fg : RGB::named(rltk::SILVER),
+            bg : RGB::named(rltk::ORANGE4),
+            render_order : 2
+        })
+        .with(Name{ name : "Tower Shield".to_string() })
+        .with(Item{})
+        .with(Equippable{ slot : EquipmentSlot::Shield })
+        .with(DefenseBonus{ defense : 3 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
 
 fn room_table(map_depth : i32) -> RandomTable {
     return RandomTable::new()
-        .add("Goblin", 100)
+        .add("Goblin", 10)
         .add("Orc", 1 + map_depth)
         .add("Health Potion", 7)
         .add("Fireball Scroll", 2 + map_depth)
         .add("Confusion Scroll", 2 + map_depth)
         .add("Magic Missile Scroll", 4)
-        .add("Dagger", 100)
-        .add("Shield", 100);
+        .add("Dagger", 3)
+        .add("Shield", 3)
+        .add("Longsword", map_depth - 1)
+        .add("Tower Shield", map_depth - 1);
 }
 
 /// Fill room with stuff
@@ -250,6 +285,8 @@ pub fn spawn_room(ecs : &mut World, room : &Rect, map_depth : i32) {
             "Magic Missile Scroll" => magic_missile_scroll(ecs, x, y),
             "Dagger" => dagger(ecs, x, y),
             "Shield" => shield(ecs, x, y),
+            "Longsword" => longsword(ecs, x, y),
+            "Tower Shield" => tower_shield(ecs, x, y),
             _ => {}
         }
     }
