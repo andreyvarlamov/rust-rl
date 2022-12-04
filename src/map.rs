@@ -28,7 +28,7 @@ pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
      Otherwise tile_type == TileType::Wall wouldn't compile */
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum TileType {
-    Wall, Floor
+    Wall, Floor, DownStairs
 }
 
 #[derive(Default, Serialize, Deserialize, Clone)]
@@ -222,6 +222,10 @@ impl Map {
             }
         }
 
+        let (stairs_x, stairs_y) = map.rooms[map.rooms.len()-1].center();
+        let stairs_idx = map.xy_idx(stairs_x, stairs_y);
+        map.tiles[stairs_idx] = TileType::DownStairs;
+
         map
     }
 
@@ -308,6 +312,10 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
                 TileType::Wall => {
                     glyph = rltk::to_cp437('#');
                     fg = RGB::from_f32(0.0, 1.0, 0.0);
+                }
+                TileType::DownStairs => {
+                    glyph = rltk::to_cp437('>');
+                    fg = RGB::from_f32(0.,1.0, 1.0);
                 }
             }
 
