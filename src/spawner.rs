@@ -169,13 +169,13 @@ fn room_table() -> RandomTable {
 
 /// Fill room with stuff
 #[allow(clippy::map_entry)]
-pub fn spawn_room(ecs : &mut World, room : &Rect) {
+pub fn spawn_room(ecs : &mut World, room : &Rect, map_depth : i32) {
     let spawn_table = room_table();
     let mut spawn_points : HashMap<usize, String> = HashMap::new();
 
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        let num_spawns = rng.roll_dice(1, MAX_SPAWNS + 3) - 3;
+        let num_spawns = rng.roll_dice(1, MAX_SPAWNS + 3) + (map_depth - 1) - 3;
 
         for _i in 0 .. num_spawns {
             let mut added = false;
