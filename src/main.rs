@@ -276,7 +276,7 @@ fn main() -> rltk::BError {
     gs.ecs.insert(GameLog { entries : vec!["Hello".to_string()] });
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
-    let map : Map = Map::new_map_rooms_and_corridors();
+    let map : Map = Map::new_map_rooms_and_corridors(1);
 
     let (player_x, player_y) = map.rooms[0].center();
 
