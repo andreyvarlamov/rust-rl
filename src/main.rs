@@ -30,6 +30,8 @@ mod spawner;
 mod inventory_system;
 use inventory_system::*;
 mod saveload_system;
+mod random_table;
+use random_table::RandomTable;
 
 // Consts
 const SHOW_FPS : bool = false;
