@@ -29,6 +29,7 @@ use gamelog::GameLog;
 mod spawner;
 mod inventory_system;
 use inventory_system::*;
+mod saveload_system;
 
 // Consts
 const SHOW_FPS : bool = false;
@@ -202,9 +203,7 @@ impl GameState for State {
                 }
             }
             RunState::SaveGame => {
-                let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
-                println!("{}", data);
-
+                saveload_system::save_game(&mut self.ecs);
                 newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame }
             }
         }
@@ -265,6 +264,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Confusion>();
 
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
+    gs.ecs.register::<SerializationHelper>();
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     gs.ecs.insert(RunState::MainMenu{ menu_selection : gui::MainMenuSelection::NewGame });

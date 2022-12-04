@@ -5,8 +5,6 @@ use specs::prelude::*;
 use specs_derive::*;
 use rltk::{ RGB, Point };
 
-pub struct SerializeMe;
-
 //
 /* POD (Plain Old Data) - no logic - "pure" ECS
    2 reasons to use this model:
@@ -148,4 +146,14 @@ pub struct AreaOfEffect {
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Confusion {
     pub turns : i32
+}
+
+// Serializetion helper code
+
+pub struct SerializeMe;
+
+// Special component that exists to help serialize the game data
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SerializationHelper {
+    pub map : super::map::Map
 }
