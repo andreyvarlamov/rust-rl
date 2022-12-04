@@ -456,11 +456,16 @@ pub fn game_over(ctx : &mut Rltk) -> GameOverResult {
         20,
         RGB::named(rltk::MAGENTA),
         RGB::named(rltk::BLACK),
-        "Press any key to return to the main menu."
+        "Press ENTER to return to the main menu."
     );
 
     match ctx.key {
         None => GameOverResult::NoSelection,
-        Some(_) => GameOverResult::QuitToMenu
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Return => GameOverResult::QuitToMenu,
+                _ => return GameOverResult::NoSelection
+            }
+        }
     }
 }
