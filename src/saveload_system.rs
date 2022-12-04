@@ -45,7 +45,8 @@ pub fn save_game(ecs : &mut World) {
                                 Viewshed, Monster, Name, BlocksTile, CombatStats, SufferDamage,
                                 WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
                                 AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem,
-                                WantsToUseItem, WantsToDropItem, SerializationHelper);
+                                WantsToUseItem, WantsToDropItem, SerializationHelper,
+                                Equippable);
     }
 
     // Clean up
@@ -97,7 +98,8 @@ pub fn load_game(ecs : &mut World) {
                                   Monster, Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee,
                                   Item, Consumable, Ranged, InflictsDamage, AreaOfEffect,
                                   Confusion, ProvidesHealing, InBackpack, WantsToPickupItem,
-                                  WantsToUseItem, WantsToDropItem, SerializationHelper);
+                                  WantsToUseItem, WantsToDropItem, SerializationHelper,
+                                  Equippable);
     }
 
     let mut deleteme : Option<Entity> = None;
